@@ -1,0 +1,17 @@
+digraph Grafo_Presion_Limpio {
+	graph [rankdir=LR]
+	"" [label="" shape=plaintext]
+	q_final [label=q_final shape=doublecircle]
+	q_num2 [label=q_num2 shape=circle]
+	q_num3 [label=q_num3 shape=circle]
+	q_num4 [label=q_num4 shape=circle]
+	q_num1 [label=q_num1 shape=circle]
+	q0 [label=q0 shape=circle]
+	"" -> q0 [label=""]
+	q0 -> q_num1 [label=A]
+	q0 -> q_num1 [label=Q]
+	q_num1 -> q_num2 [label="0-9"]
+	q_num2 -> q_num3 [label="0-9"]
+	q_num3 -> q_num4 [label="0-9"]
+	q_num4 -> q_final [label="0-9"]
+}

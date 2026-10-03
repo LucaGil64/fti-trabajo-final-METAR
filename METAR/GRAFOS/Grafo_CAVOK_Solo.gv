@@ -1,0 +1,16 @@
+digraph Grafo_CAVOK_Solo {
+	graph [rankdir=LR]
+	"" [label="" shape=plaintext]
+	q_final [label=q_final shape=doublecircle]
+	q2 [label=q2 shape=circle]
+	q1 [label=q1 shape=circle]
+	q0 [label=q0 shape=circle]
+	q3 [label=q3 shape=circle]
+	q4 [label=q4 shape=circle]
+	"" -> q0 [label=""]
+	q0 -> q1 [label=C]
+	q1 -> q2 [label=A]
+	q2 -> q3 [label=V]
+	q3 -> q4 [label=O]
+	q4 -> q_final [label=K]
+}
