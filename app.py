@@ -20,34 +20,79 @@ from METAR.CODIGO.temperatura import modulo_temperatura
 from METAR.CODIGO.presion import modulo_presion
 from METAR.CODIGO.tendencias import modulo_tendencias
 
-def abrir_ventana_graficos(datos_graficos):
-    # Creamos la ventana secundaria por encima de la principal
+def abrir_ventana_graficos(datos_graficos, fragmentos):
     ventana_graf = tk.Toplevel(ventana)
     ventana_graf.title("Dashboard Visual METAR")
-    try:
-        ventana_graf.state('zoomed') # Intenta el metodo de Windows
-    except tk.TclError:
-        ventana_graf.attributes('-zoomed', True) # Si falla, usa el metodo de Linux
-    ventana_graf.configure(bg="#005AA0")
+    ventana_graf.state('zoomed') 
+    ventana_graf.configure(bg="#004d80") # Un azul apenitas más oscuro de fondo general
 
-    # Lienzo gigante para los instrumentos
-    canvas = tk.Canvas(ventana_graf, bg="#005AA0", highlightthickness=0)
+    canvas = tk.Canvas(ventana_graf, bg="#004d80", highlightthickness=0)
     canvas.pack(fill=tk.BOTH, expand=True)
     
-    canvas.create_text(680, 50, text="REPORTE METAR DECODIFICADO", fill="white", font=("Arial", 24, "bold"))
+    # ---------------------------------------------------------
+    # FUNCIÓN INTERNA: Dibuja un panel con bordes redondeados
+    # ---------------------------------------------------------
+    def dibujar_tarjeta(x1, y1, x2, y2, color_fondo, titulo):
+        radio = 15
+        canvas.create_polygon(
+            x1+radio, y1, x2-radio, y1, x2, y1+radio, x2, y2-radio, 
+            x2-radio, y2, x1+radio, y2, x1, y2-radio, x1, y1+radio,
+            fill=color_fondo, outline="", smooth=True
+        )
+        # Línea divisoria y título de la tarjeta
+        canvas.create_line(x1 + 10, y1 + 35, x2 - 10, y1 + 35, fill="#003355")
+        canvas.create_text((x1+x2)/2, y1 + 18, text=titulo, fill="white", font=("Arial", 11, "bold"))
 
-    # Inyectamos los datos guardados en los dibujos
+    # ---------------------------------------------------------
+    # 1. ENCABEZADO SUPERIOR DINÁMICO
+    # ---------------------------------------------------------
+    # Extraemos el código OACI (usualmente es el segundo elemento del reporte)
+    codigo_oaci = fragmentos[1] if len(fragmentos) > 1 else "OACI"
+
+    # Buscamos el token de fecha/hora y lo formateamos
+    dia_hora_formateada = "Desconocida"
+    for frag in fragmentos:
+        if frag.endswith("Z") and len(frag) == 7 and frag[:-1].isdigit():
+            dia = frag[0:2]
+            hora = frag[2:4]
+            minuto = frag[4:6]
+            dia_hora_formateada = f"Día {dia} a las {hora}:{minuto} UTC"
+
+    # Dibujamos la barra azul del encabezado
+    canvas.create_rectangle(0, 0, 2000, 80, fill="#005AA0", outline="")
+    
+    # Texto de la Estación (Solo muestra el código, ej: "ESTACIÓN: SAVC")
+    canvas.create_text(50, 40, text=f"REPORTE METAR - ESTACIÓN: {codigo_oaci}", 
+                       fill="white", font=("Arial", 20, "bold"), anchor="w")
+    
+    # Texto de la hora (Alineado bien a la derecha, en X=1300)
+    canvas.create_text(1300, 40, text=f"Emitido: {dia_hora_formateada}", 
+                       fill="#4CB8C4", font=("Arial", 16, "bold"), anchor="e")
+
+    # ---------------------------------------------------------
+    # 2. TARJETAS DE INSTRUMENTOS (Fondos)
+    # ---------------------------------------------------------
+    # Tarjeta Viento
+    dibujar_tarjeta(80, 120, 420, 500, "#005AA0", "VIENTO EN SUPERFICIE")
+    # Tarjeta Clima (Temp + Presión)
+    dibujar_tarjeta(450, 120, 850, 500, "#005AA0", "TEMPERATURA Y PRESIÓN")
+    # Tarjeta Nubes (Ocupa a lo ancho a la derecha)
+    dibujar_tarjeta(880, 120, 1300, 500, "#005AA0", "COBERTURA DE NUBES")
+
+    # ---------------------------------------------------------
+    # 3. DIBUJAR INSTRUMENTOS ADENTRO DE LAS TARJETAS
+    # ---------------------------------------------------------
     if datos_graficos['viento']:
-        dibujar_brujula(canvas, 250, 300, 140, datos_graficos['viento'][0], datos_graficos['viento'][1])
+        dibujar_brujula(canvas, 250, 320, 110, datos_graficos['viento'][0], datos_graficos['viento'][1])
         
     if datos_graficos['temp']:
-        dibujar_termometro(canvas, 550, 300, datos_graficos['temp'][0], datos_graficos['temp'][1])
+        dibujar_termometro(canvas, 550, 320, datos_graficos['temp'][0], datos_graficos['temp'][1])
         
     if datos_graficos['presion']:
-        dibujar_presion(canvas, 750, 300, datos_graficos['presion'])
+        dibujar_presion(canvas, 750, 320, datos_graficos['presion'])
         
     if datos_graficos['nubes']:
-        dibujar_grafico_nubes(canvas, 950, 150, 300, 300, datos_graficos['nubes'])
+        dibujar_grafico_nubes(canvas, 920, 180, 330, 250, datos_graficos['nubes'])
 
 def analizar_metar():
     reporte_completo = entrada_texto.get().strip().upper()
@@ -131,7 +176,7 @@ def analizar_metar():
     # LA MAGIA DE LAS VENTANAS
     if errores == 0:
         caja_resultados.insert(tk.END, "Veredicto: SINTAXIS METAR VÁLIDA.\n>>> Abriendo Dashboard Visual...")
-        abrir_ventana_graficos(datos_graficos)
+        abrir_ventana_graficos(datos_graficos, fragmentos)
     else:
         caja_resultados.insert(tk.END, f"Veredicto: SE ENCONTRARON {errores} ERROR(ES). CORRIGA EL REPORTE.")
 
