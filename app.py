@@ -1,10 +1,10 @@
 import tkinter as tk
 from tkinter import messagebox
 import re
+import csv
 
 # Importamos las 4 funciones de dibujo
 from graficos import dibujar_brujula, dibujar_termometro, dibujar_presion, dibujar_grafico_nubes
-
 from METAR.CODIGO.metar_speci import modulo_identificacion
 from METAR.CODIGO.lugar import modulo_lugar
 from METAR.CODIGO.dia_hora import modulo_dia_hora
@@ -20,15 +20,37 @@ from METAR.CODIGO.temperatura import modulo_temperatura
 from METAR.CODIGO.presion import modulo_presion
 from METAR.CODIGO.tendencias import modulo_tendencias
 
-def abrir_ventana_graficos(datos_graficos, fragmentos):
+
+# Función para cargar el CSV en un diccionario al iniciar la app
+def cargar_aeropuertos():
+    datos = {}
+    try:
+        with open('airports.csv', mode='r', encoding='utf-8') as file:
+            lector = csv.DictReader(file)
+            for fila in lector:
+                datos[fila['icao']] = fila
+    except FileNotFoundError:
+        print("Advertencia: No se encontró el archivo airports.csv")
+    return datos
+
+# Cargamos la base de datos en memoria
+base_aeropuertos = cargar_aeropuertos()
+
+
+def abrir_ventana_graficos(datos_graficos, fragmentos, datos_aeropuerto):
     ventana_graf = tk.Toplevel(ventana)
     ventana_graf.title("Dashboard Visual METAR")
-    ventana_graf.state('zoomed') 
-    ventana_graf.configure(bg="#004d80") # Un azul apenitas más oscuro de fondo general
+    
+    # Manejo multiplataforma para maximizar la ventana
+    try:
+        ventana_graf.state('zoomed') # Windows
+    except tk.TclError:
+        ventana_graf.attributes('-zoomed', True) # Linux
 
+    ventana_graf.configure(bg="#004d80") # Un azul apenitas más oscuro de fondo general
     canvas = tk.Canvas(ventana_graf, bg="#004d80", highlightthickness=0)
     canvas.pack(fill=tk.BOTH, expand=True)
-    
+         
     # ---------------------------------------------------------
     # FUNCIÓN INTERNA: Dibuja un panel con bordes redondeados
     # ---------------------------------------------------------
@@ -46,9 +68,9 @@ def abrir_ventana_graficos(datos_graficos, fragmentos):
     # ---------------------------------------------------------
     # 1. ENCABEZADO SUPERIOR DINÁMICO
     # ---------------------------------------------------------
-    # Extraemos el código OACI (usualmente es el segundo elemento del reporte)
+    # Extraemos el código OACI
     codigo_oaci = fragmentos[1] if len(fragmentos) > 1 else "OACI"
-
+    
     # Buscamos el token de fecha/hora y lo formateamos
     dia_hora_formateada = "Desconocida"
     for frag in fragmentos:
@@ -57,18 +79,31 @@ def abrir_ventana_graficos(datos_graficos, fragmentos):
             hora = frag[2:4]
             minuto = frag[4:6]
             dia_hora_formateada = f"Día {dia} a las {hora}:{minuto} UTC"
+            
+    # Dibujamos la barra azul del encabezado (Altura de 100px para la info geográfica)
+    canvas.create_rectangle(0, 0, 2000, 100, fill="#005AA0", outline="")
+         
+    # Texto de la Estación
+    canvas.create_text(50, 35, text=f"REPORTE METAR - ESTACIÓN: {codigo_oaci}",
+                        fill="white", font=("Arial", 20, "bold"), anchor="w")
+                        
+    # Texto Geográfico (Extraído del CSV)
+    if datos_aeropuerto:
+        nombre = datos_aeropuerto.get('name', '')
+        ciudad = datos_aeropuerto.get('city', '')
+        subd = datos_aeropuerto.get('subd', '')
+        pais = datos_aeropuerto.get('country', '')
+        texto_info = f"{nombre} | {ciudad}, {subd}, {pais}"
+    else:
+        texto_info = "Información geográfica no disponible."
 
-    # Dibujamos la barra azul del encabezado
-    canvas.create_rectangle(0, 0, 2000, 80, fill="#005AA0", outline="")
-    
-    # Texto de la Estación (Solo muestra el código, ej: "ESTACIÓN: SAVC")
-    canvas.create_text(50, 40, text=f"REPORTE METAR - ESTACIÓN: {codigo_oaci}", 
-                       fill="white", font=("Arial", 20, "bold"), anchor="w")
-    
-    # Texto de la hora (Alineado bien a la derecha, en X=1300)
-    canvas.create_text(1300, 40, text=f"Emitido: {dia_hora_formateada}", 
-                       fill="#4CB8C4", font=("Arial", 16, "bold"), anchor="e")
-
+    canvas.create_text(50, 70, text=texto_info,
+                        fill="#4CB8C4", font=("Arial", 14, "bold"), anchor="w")
+         
+    # Texto de la hora (Alineado bien a la derecha)
+    canvas.create_text(1300, 50, text=f"Emitido: {dia_hora_formateada}",
+                        fill="#4CB8C4", font=("Arial", 16, "bold"), anchor="e")
+                        
     # ---------------------------------------------------------
     # 2. TARJETAS DE INSTRUMENTOS (Fondos)
     # ---------------------------------------------------------
@@ -78,38 +113,39 @@ def abrir_ventana_graficos(datos_graficos, fragmentos):
     dibujar_tarjeta(450, 120, 850, 500, "#005AA0", "TEMPERATURA Y PRESIÓN")
     # Tarjeta Nubes (Ocupa a lo ancho a la derecha)
     dibujar_tarjeta(880, 120, 1300, 500, "#005AA0", "COBERTURA DE NUBES")
-
+    
     # ---------------------------------------------------------
     # 3. DIBUJAR INSTRUMENTOS ADENTRO DE LAS TARJETAS
     # ---------------------------------------------------------
     if datos_graficos['viento']:
         dibujar_brujula(canvas, 250, 320, 110, datos_graficos['viento'][0], datos_graficos['viento'][1])
-        
+             
     if datos_graficos['temp']:
         dibujar_termometro(canvas, 550, 320, datos_graficos['temp'][0], datos_graficos['temp'][1])
-        
+             
     if datos_graficos['presion']:
         dibujar_presion(canvas, 750, 320, datos_graficos['presion'])
-        
+             
     if datos_graficos['nubes']:
         dibujar_grafico_nubes(canvas, 920, 180, 330, 250, datos_graficos['nubes'])
+
 
 def analizar_metar():
     reporte_completo = entrada_texto.get().strip().upper()
     if not reporte_completo:
         messagebox.showwarning("Advertencia", "Por favor, ingresa un código METAR.")
         return
-
+        
     fragmentos = reporte_completo.split()
     caja_resultados.delete(1.0, tk.END)
     errores = 0
-
+    
     # Memoria temporal para guardar datos SI el autómata los acepta
     datos_graficos = {'viento': None, 'temp': None, 'presion': None, 'nubes': []}
-
+    
     for fragmento in fragmentos:
         tipo_identificado = "Desconocido / Inválido"
-
+        
         if modulo_identificacion.accept(fragmento):
             tipo_identificado = "Tipo de Reporte (METAR/SPECI)"
         elif modulo_cavok.accept(fragmento):
@@ -120,16 +156,16 @@ def analizar_metar():
             tipo_identificado = "Tendencia"
         elif modulo_dia_hora.accept(fragmento):
             tipo_identificado = "Día y Hora"
-            
+                     
         elif modulo_viento_base.accept(fragmento):
             tipo_identificado = "Viento"
             match = re.match(r'(\d{3}|VRB)(\d{2,3})', fragmento)
             if match and match.group(1) != "VRB":
                 datos_graficos['viento'] = (int(match.group(1)), int(match.group(2)))
-                
+                         
         elif modulo_rango_variable.accept(fragmento):
             tipo_identificado = "Viento Variable"
-            
+                     
         elif modulo_temperatura.accept(fragmento):
             tipo_identificado = "Temperatura / Punto de Rocío"
             partes = fragmento.split("/")
@@ -140,21 +176,21 @@ def analizar_metar():
                     datos_graficos['temp'] = (int(str_temp), int(str_rocio))
                 except ValueError:
                     pass
-                    
+                             
         elif modulo_presion.accept(fragmento):
             tipo_identificado = "Presión (QNH/Altimetro)"
             qnh_valor = int(fragmento[1:]) if fragmento[1:].isdigit() else 1013
             if fragmento.startswith("A"):
                 qnh_valor = int(qnh_valor * 33.8639 / 100)
             datos_graficos['presion'] = qnh_valor
-            
+                     
         elif modulo_nubes.accept(fragmento):
             tipo_identificado = "Nubosidad"
             cantidad = fragmento[:3]
             if fragmento[3:].isdigit():
                 altura_pies = int(fragmento[3:]) * 100
                 datos_graficos['nubes'].append((cantidad, altura_pies))
-                
+                         
         elif modulo_clima.accept(fragmento):
             tipo_identificado = "Fenómeno Climático"
         elif modulo_vis_general.accept(fragmento):
@@ -165,25 +201,31 @@ def analizar_metar():
             tipo_identificado = "Identificador de Estación (OACI)"
         else:
             errores += 1
-
+            
         if tipo_identificado == "Desconocido / Inválido":
-            caja_resultados.insert(tk.END, f"❌ [{fragmento}] -> NO RECONOCIDO\n")
+            caja_resultados.insert(tk.END, f"  [{fragmento}] -> NO RECONOCIDO\n")
         else:
-            caja_resultados.insert(tk.END, f"✅ [{fragmento}] -> {tipo_identificado}\n")
-
+            caja_resultados.insert(tk.END, f"  [{fragmento}] -> {tipo_identificado}\n")
+            
     caja_resultados.insert(tk.END, "-"*40 + "\n")
-    
+         
     # LA MAGIA DE LAS VENTANAS
     if errores == 0:
         caja_resultados.insert(tk.END, "Veredicto: SINTAXIS METAR VÁLIDA.\n>>> Abriendo Dashboard Visual...")
-        abrir_ventana_graficos(datos_graficos, fragmentos)
+        
+        # Extraer OACI
+        codigo_oaci = fragmentos[1] if len(fragmentos) > 1 else fragmentos[0]
+        datos_aeropuerto = base_aeropuertos.get(codigo_oaci, None)
+        
+        abrir_ventana_graficos(datos_graficos, fragmentos, datos_aeropuerto)
     else:
-        caja_resultados.insert(tk.END, f"Veredicto: SE ENCONTRARON {errores} ERROR(ES). CORRIGA EL REPORTE.")
+        caja_resultados.insert(tk.END, f"Veredicto: SE ENCONTRARON {errores} ERROR(ES). CORRIJA EL REPORTE.")
+
 
 # Crear la ventana principal de Consola
 ventana = tk.Tk()
 ventana.title("Validador Completo METAR - FTI")
-ventana.geometry("700x550") # Ventana compacta, sin canvas acá
+ventana.geometry("700x550")
 ventana.configure(bg="#005AA0")
 
 etiqueta = tk.Label(ventana, text="Ingresa el reporte METAR completo:", font=("Arial", 14), bg="#005AA0", fg="white")
