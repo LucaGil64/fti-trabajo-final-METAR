@@ -1,51 +1,32 @@
 from automathon import DFA
+import string
 
 q = {
-    'q0', 
-    'q1_bajos', 'q1_alto', 'q2_cualquiera', 'q2_solo_cero',
-    'q_letra_v', 'q_v_leida',
-    'q3_bajos', 'q3_alto', 'q4_cualquiera', 'q4_solo_cero',
-    'q_final'
+    'q0', 'q1_bajos', 'q1_alto', 'q2_cualquiera', 'q2_solo_cero',
+    'q_letra_v', 'q_v_leida', 'q3_bajos', 'q3_alto', 'q4_cualquiera', 
+    'q4_solo_cero', 'q_final'
 }
 
-# El alfabeto incluye las agrupaciones exactas que necesitamos para los límites
-sigma = {'0-2', '3', '0-5', '6', '0-9', '0', 'V'}
+numeros = set(string.digits)
+sigma = numeros.union({'V'})
+
+# Creamos listas para los rangos específicos
+rango_0_2 = ['0', '1', '2']
+rango_0_5 = ['0', '1', '2', '3', '4', '5']
 
 delta = {
-    # --- PRIMER ÁNGULO (000 a 360) ---
-    'q0': {
-        '0-2': 'q1_bajos',  # Si empieza con 0, 1 o 2, va holgado
-        '3': 'q1_alto'      # Si empieza con 3, entra al camino estricto
-    },
-    
-    # Camino holgado (ej: 299)
-    'q1_bajos': {'0-9': 'q2_cualquiera'},
-    
-    # Camino estricto (ej: 359 o 360)
-    'q1_alto': {
-        '0-5': 'q2_cualquiera', # Permite hasta 35_
-        '6': 'q2_solo_cero'     # Si llega a 36_, lo obliga a que el último sea 0
-    },
-    
-    # Cierre del primer ángulo
-    'q2_cualquiera': {'0-9': 'q_letra_v'},
+    'q0': {**{n: 'q1_bajos' for n in rango_0_2}, '3': 'q1_alto'},
+    'q1_bajos': {n: 'q2_cualquiera' for n in numeros},
+    'q1_alto': {**{n: 'q2_cualquiera' for n in rango_0_5}, '6': 'q2_solo_cero'},
+    'q2_cualquiera': {n: 'q_letra_v' for n in numeros},
     'q2_solo_cero': {'0': 'q_letra_v'},
     
-    # --- LETRA V (Separador) ---
     'q_letra_v': {'V': 'q_v_leida'},
     
-    # --- SEGUNDO ÁNGULO (000 a 360) ---
-    # Aplica exactamente la misma lógica restrictiva
-    'q_v_leida': {
-        '0-2': 'q3_bajos',
-        '3': 'q3_alto'
-    },
-    'q3_bajos': {'0-9': 'q4_cualquiera'},
-    'q3_alto': {
-        '0-5': 'q4_cualquiera',
-        '6': 'q4_solo_cero'
-    },
-    'q4_cualquiera': {'0-9': 'q_final'},
+    'q_v_leida': {**{n: 'q3_bajos' for n in rango_0_2}, '3': 'q3_alto'},
+    'q3_bajos': {n: 'q4_cualquiera' for n in numeros},
+    'q3_alto': {**{n: 'q4_cualquiera' for n in rango_0_5}, '6': 'q4_solo_cero'},
+    'q4_cualquiera': {n: 'q_final' for n in numeros},
     'q4_solo_cero': {'0': 'q_final'},
     
     'q_final': {}
@@ -53,5 +34,4 @@ delta = {
 
 initial_state = 'q0'
 f = {'q_final'}
-
 modulo_rango_variable = DFA(q, sigma, delta, initial_state, f)
