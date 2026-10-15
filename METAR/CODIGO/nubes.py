@@ -83,5 +83,3 @@ initial_state = 'q0'
 f = {'q_final_layer', 'q_final_special'}
 
 modulo_nubes = DFA(q, sigma, delta, initial_state, f)
-modulo_nubes.view("Grafo_Nubes_Completo")
-print("¡Grafo avanzado de nubes generado!")

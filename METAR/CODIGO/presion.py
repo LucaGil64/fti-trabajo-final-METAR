@@ -28,5 +28,3 @@ f = {'q_final'}
 
 # Construcción y dibujo
 modulo_presion = DFA(q, sigma, delta, initial_state, f)
-modulo_presion.view("Grafo_Presion_Limpio")
-print("¡Grafo de presión unificado y limpio generado exitosamente!")

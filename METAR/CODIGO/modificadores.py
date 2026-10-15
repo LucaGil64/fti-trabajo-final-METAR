@@ -38,5 +38,3 @@ f = {'q_final'}
 
 # Construcción y dibujo
 modulo_mods = DFA(q, sigma, delta, initial_state, f)
-modulo_mods.view("Grafo_Modificadores")
-print("¡Grafo del módulo Modificadores generado exitosamente!")

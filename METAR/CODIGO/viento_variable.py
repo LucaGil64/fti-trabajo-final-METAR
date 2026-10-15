@@ -55,5 +55,3 @@ initial_state = 'q0'
 f = {'q_final'}
 
 modulo_rango_variable = DFA(q, sigma, delta, initial_state, f)
-modulo_rango_variable.view("Grafo_Viento_Variable_Limitado")
-print("¡Grafo de rango variable (máximo 360) generado exitosamente!")

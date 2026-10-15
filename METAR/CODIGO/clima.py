@@ -51,7 +51,3 @@ initial_state = 'q0'
 
 # 4. Generación gráfica
 modulo_clima = DFA(q, sigma, delta, initial_state, f)
-modulo_clima.view("Grafo_Clima_Diccionario_Completo")
-
-print(f"¡Grafo generado algorítmicamente con éxito!")
-print(f"Python creó {len(q)} estados y {len(valid_words)} rutas válidas automáticamente.")

@@ -31,7 +31,3 @@ f = {'q_final'}
 
 # Construcción del autómata
 modulo_identificacion = DFA(q, sigma, delta, initial_state, f)
-
-# Generación de la imagen del grafo
-modulo_identificacion.view("Modulo_Identificacion")
-print("Grafo del primer módulo generado exitosamente.")

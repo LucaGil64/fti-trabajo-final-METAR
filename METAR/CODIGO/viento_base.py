@@ -54,5 +54,3 @@ initial_state = 'q0'
 f = {'q_final'}
 
 modulo_viento_base = DFA(q, sigma, delta, initial_state, f)
-modulo_viento_base.view("Grafo_Viento_Base")
-print("¡Grafo del viento principal generado!")

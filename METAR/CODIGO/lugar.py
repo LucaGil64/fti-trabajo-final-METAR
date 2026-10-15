@@ -21,5 +21,3 @@ f = {'q_final'}
 
 # Construcción y dibujo del autómata
 modulo_lugar = DFA(q, sigma, delta, initial_state, f)
-modulo_lugar.view("Grafo_Lugar")
-print("¡Grafo del módulo Lugar generado exitosamente!")

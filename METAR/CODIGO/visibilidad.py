@@ -76,5 +76,3 @@ f = {
 }
 
 modulo_vis = DFA(q, sigma, delta, initial_state, f)
-modulo_vis.view("Grafo_Visibilidad_Avanzada")
-print("¡Grafo de visibilidad con normas ICAO y FAA generado!")

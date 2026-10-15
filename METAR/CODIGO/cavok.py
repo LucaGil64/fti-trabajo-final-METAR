@@ -21,5 +21,3 @@ f = {'q_final'}
 
 # Construcción y dibujo
 modulo_cavok = DFA(q, sigma, delta, initial_state, f)
-modulo_cavok.view("Grafo_CAVOK_Solo")
-print("¡Grafo individual de CAVOK generado exitosamente!")

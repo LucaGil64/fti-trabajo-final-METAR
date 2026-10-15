@@ -45,5 +45,3 @@ initial_state = 'q0'
 f = {'q_final'}
 
 modulo_dia_hora = DFA(q, sigma, delta, initial_state, f)
-modulo_dia_hora.view("Grafo_Dia_Hora")
-print("¡Grafo del módulo Día y Hora generado con validación estricta!")

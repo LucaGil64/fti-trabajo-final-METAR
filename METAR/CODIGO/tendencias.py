@@ -52,5 +52,3 @@ f = {'q_final'}
 
 # Construcción y dibujo
 modulo_tendencias = DFA(q, sigma, delta, initial_state, f)
-modulo_tendencias.view("Grafo_Tendencias")
-print("¡Grafo del módulo Tendencias generado exitosamente!")

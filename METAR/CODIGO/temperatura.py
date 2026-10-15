@@ -44,5 +44,3 @@ initial_state = 'q0'
 f = {'q_final'}
 
 modulo_temperatura = DFA(q, sigma, delta, initial_state, f)
-modulo_temperatura.view("Grafo_Temperatura")
-print("¡Grafo del módulo Temperatura generado exitosamente!")
