@@ -1,0 +1,5 @@
+# Ignorar el archivo de configuración local
+.vscode/settings.json
+
+# Ignorar la carpeta pycache específica de los módulos
+METAR/CODIGO/__pycache__/

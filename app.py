@@ -24,7 +24,10 @@ def abrir_ventana_graficos(datos_graficos):
     # Creamos la ventana secundaria por encima de la principal
     ventana_graf = tk.Toplevel(ventana)
     ventana_graf.title("Dashboard Visual METAR")
-    ventana_graf.state('zoomed') # Pantalla completa
+    try:
+        ventana_graf.state('zoomed') # Intenta el metodo de Windows
+    except tk.TclError:
+        ventana_graf.attributes('-zoomed', True) # Si falla, usa el metodo de Linux
     ventana_graf.configure(bg="#005AA0")
 
     # Lienzo gigante para los instrumentos
