@@ -78,28 +78,33 @@ def dibujar_grafico_nubes(canvas, x_base, y_base, ancho, alto, lista_nubes):
     for i in range(1, 6):
         altura_escala = i * 1000
         y_linea = y_base + alto - (altura_escala / 5000) * alto
-        # Línea de fondo
         canvas.create_line(x_base, y_linea, x_base + ancho, y_linea, fill="#203A43", width=1)
-        # Texto de la altura en la regla
         canvas.create_text(x_base - 25, y_linea, text=f"{altura_escala:,}", fill="#4CB8C4", font=("Arial", 10))
     
-    # Etiqueta base de 0 ft
     canvas.create_text(x_base - 25, y_base + alto, text="0 ft", fill="#4CB8C4", font=("Arial", 10))
+
+    # Diccionario para saber cuántas nubes dibujar horizontalmente según la cobertura
+    cobertura_map = {"FEW": 2, "SCT": 3, "BKN": 4, "OVC": 5}
 
     # 3. Dibujar cada capa de nube
     for (cantidad, alt_pies) in lista_nubes:
-        # Si la nube está a más de 5000 pies, la dibujamos en el tope del gráfico para que no se salga
         alt_visual = min(alt_pies, 5000) 
         y_nube = y_base + alto - (alt_visual / 5000) * alto
         
-        # Dibujamos los 3 círculos que forman la nube blanca
-        x_nube = x_base + 80
-        canvas.create_oval(x_nube - 30, y_nube - 15, x_nube + 10, y_nube + 15, fill="white", outline="")
-        canvas.create_oval(x_nube - 15, y_nube - 25, x_nube + 25, y_nube + 15, fill="white", outline="")
-        canvas.create_oval(x_nube + 10, y_nube - 15, x_nube + 40, y_nube + 15, fill="white", outline="")
+        # Obtenemos el número de nubes a dibujar (por defecto 1 si no reconoce el término)
+        num_iconos = cobertura_map.get(cantidad, 1)
         
-        # Dibujamos la tarjetita estilo "FEW 4,500" a la derecha de la nube
-        x_tag = x_base + 200
+        # Bucle para dibujar las nubes una al lado de la otra
+        for j in range(num_iconos):
+            # Desplazamos cada ícono 60 píxeles hacia la derecha
+            x_nube = x_base + 40 + (j * 60) 
+            
+            canvas.create_oval(x_nube - 30, y_nube - 15, x_nube + 10, y_nube + 15, fill="white", outline="")
+            canvas.create_oval(x_nube - 15, y_nube - 25, x_nube + 25, y_nube + 15, fill="white", outline="")
+            canvas.create_oval(x_nube + 10, y_nube - 15, x_nube + 40, y_nube + 15, fill="white", outline="")
+        
+        # Dibujamos la tarjetita estilo "FEW 4,500" al final de la línea a la derecha
+        x_tag = x_base + 300
         canvas.create_rectangle(x_tag - 40, y_nube - 12, x_tag + 40, y_nube + 12, 
                                 fill="#0F2027", outline="#4CB8C4", width=1)
         canvas.create_text(x_tag, y_nube, text=f"{cantidad} {alt_pies:,}", fill="white", font=("Arial", 9, "bold"))
